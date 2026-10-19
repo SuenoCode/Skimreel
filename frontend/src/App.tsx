@@ -177,9 +177,27 @@ export default function App() {
     setError(null)
     clearDoneTimer()
     if (pollInterval.current) clearInterval(pollInterval.current)
+    const cleanUrl = new URL(window.location.href)
+    cleanUrl.searchParams.delete("job")
+    cleanUrl.searchParams.delete("source")
+    window.history.replaceState({}, "", cleanUrl.toString())
   }
 
   useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const handedOffJob = params.get("job")
+    const handedOffSource = params.get("source")
+    if (handedOffJob) {
+      setView("loading")
+      setJobId(handedOffJob)
+      setJobStatus(null)
+      setError(null)
+      setMessage("")
+      setUploadPct(null)
+      if (handedOffSource) setLink(handedOffSource)
+      startPolling(handedOffJob)
+    }
+
     return () => {
       if (pollInterval.current) clearInterval(pollInterval.current)
       clearDoneTimer()
