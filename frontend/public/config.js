@@ -9,5 +9,5 @@ window.__SKIMREEL_CONFIG__ = {
   // Vite proxy.
   //
   // VITE_API_BASE, if set, takes precedence over this value.
-  apiBase: "",
+  apiBase: "https://skimreel-backend.onrender.com",
 }
