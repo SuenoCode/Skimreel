@@ -60,18 +60,17 @@ export default function App() {
 
   function validateUrl(url: string): boolean {
     try {
-      const u = new URL(url)
+      const input = url.trim()
+      const normalized = /^https?:\/\//i.test(input) ? input : `https://${input}`
+      const u = new URL(normalized)
       if (u.protocol !== "https:" && u.protocol !== "http:") return false
-      return [
-        "youtube.com",
-        "www.youtube.com",
-        "m.youtube.com",
-        "youtu.be",
-        "twitch.tv",
-        "www.twitch.tv",
-        "kick.com",
-        "www.kick.com",
-      ].includes(u.hostname)
+      const host = u.hostname.toLowerCase()
+      return (
+        host === "youtu.be" ||
+        ["youtube.com", "twitch.tv", "kick.com"].some(
+          (domain) => host === domain || host.endsWith(`.${domain}`),
+        )
+      )
     } catch {
       return false
     }
@@ -105,7 +104,13 @@ export default function App() {
     if (files.length) {
       formData.append("file", files[0])
     } else {
-      formData.append("url", link.trim())
+      const trimmedLink = link.trim()
+      formData.append(
+        "url",
+        /^https?:\/\//i.test(trimmedLink)
+          ? trimmedLink
+          : `https://${trimmedLink}`,
+      )
     }
     formData.append("length", String(duration))
     formData.append("count", String(count))
