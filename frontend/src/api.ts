@@ -225,6 +225,10 @@ export function deepLink(url: string, startSec: number): string | null {
       u.searchParams.set("t", `${h_}h${m_}m${s_}s`)
       return u.href
     }
+    if (h === "kick.com") {
+      u.searchParams.set("t", `${s}s`)
+      return u.href
+    }
   } catch {
     return null
   }

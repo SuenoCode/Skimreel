@@ -61,6 +61,7 @@ export default function App() {
   function validateUrl(url: string): boolean {
     try {
       const u = new URL(url)
+      if (u.protocol !== "https:" && u.protocol !== "http:") return false
       return [
         "youtube.com",
         "www.youtube.com",
@@ -68,6 +69,8 @@ export default function App() {
         "youtu.be",
         "twitch.tv",
         "www.twitch.tv",
+        "kick.com",
+        "www.kick.com",
       ].includes(u.hostname)
     } catch {
       return false
@@ -77,10 +80,10 @@ export default function App() {
   function startAnalysis() {
     if (!files.length && !link.trim())
       return setMessage(
-        "Add a local video or paste a YouTube / Twitch link to get started.",
+        "Add a local video or paste a YouTube, Twitch, or Kick link to get started.",
       )
     if (link.trim() && !validateUrl(link))
-      return setMessage("Please enter a valid YouTube or Twitch URL.")
+      return setMessage("Please enter a valid YouTube, Twitch, or Kick URL.")
 
     setView("loading")
     setError(null)
@@ -406,7 +409,7 @@ export default function App() {
           </article>
           <article className="source-card">
             <div className="card-heading">
-              <h2>Paste Youtube/Twitch Link Here</h2>
+              <h2>Paste a YouTube, Twitch, or Kick link here</h2>
               <span className="tiny-tag">ONLINE</span>
             </div>
             <div className="link-zone">
@@ -416,6 +419,7 @@ export default function App() {
                 </span>
                 <span className="platform-slash">/</span>
                 <span>TWITCH</span>
+                <span>KICK</span>
               </div>
               <label htmlFor="video-link">Got a link? Drop it in.</label>
               <div className="link-input">
