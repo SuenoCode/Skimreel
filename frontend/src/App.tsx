@@ -32,6 +32,7 @@ export default function App() {
   const pollInterval = useRef<number | null>(null)
   // Pending handover to the results view, held so the last bar segment fills.
   const doneTimer = useRef<number | null>(null)
+  const desktopYoutubeActive = useRef(false)
   // Highest percentage shown so far for the running job. The bar is a single
   // timeline - upload in the browser, download and analysis from the API - and
   // each source starts reporting a moment later than the last, so without a
@@ -100,16 +101,88 @@ export default function App() {
       setJobStatus(null)
     }
 
+    const trimmedLink = link.trim()
+    const normalizedLink = /^https?:\/\//i.test(trimmedLink)
+      ? trimmedLink
+      : `https://${trimmedLink}`
+    let isYoutubeLink = false
+    try {
+      const host = new URL(normalizedLink).hostname.toLowerCase()
+      isYoutubeLink =
+        host === "youtu.be" ||
+        host === "youtube.com" ||
+        host.endsWith(".youtube.com")
+    } catch {
+      // URL validation above already reported malformed links.
+    }
+
+    // The desktop app imports YouTube videos on this PC so its signed-in
+    // Firefox cookies and current yt-dlp are used instead of cloud extraction.
+    if (!files.length && isYoutubeLink && window.skimreelDesktop) {
+      desktopYoutubeActive.current = true
+      setJobStatus({
+        done: false,
+        status: "Downloading from YouTube...",
+        pct: 0,
+        title: "",
+        moments: [],
+        error: null,
+      })
+      const unsubscribe = window.skimreelDesktop.onYoutubeOutput(({ text }) => {
+        const progresses = [...text.matchAll(/Downloading locally:\s*(\d+(?:\.\d+)?)%/g)]
+        if (progresses.length) {
+          const percent = Math.max(0, Math.min(100, Number(progresses[progresses.length - 1][1])))
+          setJobStatus({
+            done: false,
+            status: `Downloading from YouTube (${Math.round(percent)}%)`,
+            pct: Math.round(percent * 0.6),
+            title: "",
+            moments: [],
+            error: null,
+          })
+        } else if (text.includes("Uploading ")) {
+          setJobStatus({
+            done: false,
+            status: "Uploading video to SkimReel...",
+            pct: 60,
+            title: "",
+            moments: [],
+            error: null,
+          })
+        }
+      })
+      window.skimreelDesktop
+        .analyzeYoutubeLink({
+          url: normalizedLink,
+          length: duration,
+          count,
+          quality: quality.replace(/p$/, ""),
+        })
+        .then(({ job }) => {
+          unsubscribe()
+          desktopYoutubeActive.current = false
+          setJobStatus(null)
+          setJobId(job)
+          startPolling(job)
+        })
+        .catch((err) => {
+          unsubscribe()
+          if (!desktopYoutubeActive.current) return
+          desktopYoutubeActive.current = false
+          setJobStatus(null)
+          setView("error")
+          setError(err.message)
+        })
+      return
+    }
+
     const formData = new FormData()
     if (files.length) {
       formData.append("file", files[0])
     } else {
-      const trimmedLink = link.trim()
       formData.append(
         "url",
-        /^https?:\/\//i.test(trimmedLink)
-          ? trimmedLink
-          : `https://${trimmedLink}`,
+        normalizedLink,
       )
     }
     formData.append("length", String(duration))
@@ -179,6 +252,10 @@ export default function App() {
   }
 
   function handleBack() {
+    if (desktopYoutubeActive.current) {
+      desktopYoutubeActive.current = false
+      window.skimreelDesktop?.cancelYoutubeImport()
+    }
     setView("input")
     setJobId(null)
     setJobStatus(null)

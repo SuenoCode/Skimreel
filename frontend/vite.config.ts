@@ -7,7 +7,7 @@ export default defineConfig(({ mode }) => {
   const isDev = mode === "development"
 
   return {
-    base: "/",
+    base: mode === "desktop" ? "./" : "/",
     build: {
       outDir: "dist",
       emptyOutDir: true,

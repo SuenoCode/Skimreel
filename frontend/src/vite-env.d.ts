@@ -15,4 +15,16 @@ interface SkimReelRuntimeConfig {
 
 interface Window {
   __SKIMREEL_CONFIG__?: SkimReelRuntimeConfig
+  skimreelDesktop?: {
+    analyzeYoutubeLink: (input: {
+      url: string
+      length: number
+      count: number
+      quality: string
+    }) => Promise<{ job: string }>
+    cancelYoutubeImport: () => Promise<void>
+    onYoutubeOutput: (
+      callback: (message: { type: string; text: string }) => void,
+    ) => () => void
+  }
 }

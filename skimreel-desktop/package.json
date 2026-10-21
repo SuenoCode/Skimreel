@@ -1,0 +1,30 @@
+{
+  "name": "skimreel-desktop",
+  "version": "1.0.0",
+  "private": true,
+  "description": "SkimReel desktop app for Windows",
+  "main": "main.cjs",
+  "scripts": {
+    "start": "electron .",
+    "dist:win": "electron-builder --win nsis portable"
+  },
+  "devDependencies": {
+    "electron": "^38.2.2",
+    "electron-builder": "^26.0.12"
+  },
+  "build": {
+    "appId": "com.skimreel.desktop",
+    "productName": "SkimReel",
+    "directories": { "output": "release" },
+    "files": ["main.cjs", "preload.cjs", "youtube-import.html"],
+    "extraResources": [
+      { "from": "../frontend/dist", "to": "frontend" },
+      { "from": "build/helper/SkimReelYouTube.exe", "to": "helper/SkimReelYouTube.exe" },
+      { "from": "build/tools/deno.exe", "to": "tools/deno.exe" },
+      { "from": "build/tools/yt-dlp.exe", "to": "tools/yt-dlp.exe" }
+    ],
+    "win": { "target": ["nsis", "portable"], "artifactName": "${productName}-${version}-${arch}.${ext}" },
+    "nsis": { "artifactName": "${productName}-${version}-${arch}-Setup.${ext}", "oneClick": false, "allowToChangeInstallationDirectory": true, "createDesktopShortcut": true },
+    "portable": { "artifactName": "${productName}-${version}-${arch}-Portable.${ext}" }
+  }
+}

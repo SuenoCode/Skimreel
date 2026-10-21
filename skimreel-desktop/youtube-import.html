@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Import from YouTube · SkimReel</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+    :root{font-family:Arial,sans-serif;color:#e9e7df;background:#181b1c;--cyan:#1ec1cb;--muted:#7e8583;--line:#3b403f}
+    *{box-sizing:border-box}body{margin:0;padding:30px;background:radial-gradient(ellipse at 50% 0%,#28323170,transparent 55%),#181b1c}
+    .eyebrow{font:10px 'IBM Plex Mono',monospace;letter-spacing:2px;color:#a3aaa6}.dot{display:inline-block;width:5px;height:5px;background:var(--cyan);border-radius:50%;margin-right:8px}
+    h1{font-size:30px;letter-spacing:-1px;margin:12px 0 8px}p{color:#a5aba5;font-size:13px;line-height:1.55}
+    label{display:block;color:#c9d1c8;font-size:12px;font-weight:700;margin:18px 0 8px}
+    input,select{width:100%;height:42px;background:#181e1b;border:1px solid #4b554a;color:#e9e7df;padding:0 12px;font:12px 'IBM Plex Mono',monospace;border-radius:5px}
+    .row{display:grid;grid-template-columns:1fr 1fr;gap:14px}.note{padding:12px;background:#212624;border:1px solid var(--line);font-size:11px}
+    button{border:0;border-radius:5px;background:var(--cyan);color:#14201c;font-weight:700;padding:12px 16px;width:100%;margin-top:20px}
+    button.secondary{background:transparent;border:1px solid #4a534c;color:#a5aba5;margin-top:10px}button:disabled{opacity:.55}
+    #output{height:125px;overflow:auto;white-space:pre-wrap;background:#111414;border:1px solid #303835;padding:10px;color:#a5aba5;font:10px/1.55 'IBM Plex Mono',monospace;margin-top:16px}
+  </style>
+</head>
+<body>
+  <div class="eyebrow"><span class="dot"></span>LOCAL YOUTUBE IMPORT</div>
+  <h1>Bring a video into SkimReel</h1>
+  <p>SkimReel downloads public videos on this PC without a browser sign-in, then sends them to the existing analyzer.</p>
+  <label for="url">YouTube video URL</label><input id="url" placeholder="https://youtube.com/watch?v=..." autocomplete="url">
+  <div class="row"><div><label for="length">Clip length (seconds)</label><input id="length" type="number" min="5" max="180" value="30"></div><div><label for="count">Highlights</label><input id="count" type="number" min="1" max="30" value="8"></div></div>
+  <label for="quality">Maximum video quality</label><select id="quality"><option>720</option><option>1080</option><option>480</option><option>360</option></select>
+  <p class="note">Deno and the YouTube helper are included with the app. YouTube may restrict some videos or connections.</p>
+  <button id="start">Import YouTube video</button><button id="cancel" class="secondary" hidden>Cancel import</button>
+  <pre id="output" aria-live="polite">Ready. Import results open in your browser when the upload begins.</pre>
+  <script>
+    const api=window.skimreelDesktop, start=document.getElementById('start'), cancel=document.getElementById('cancel'), output=document.getElementById('output')
+    api.onYoutubeOutput(({type,text})=>{output.textContent+=`\n${text}`;output.scrollTop=output.scrollHeight;if(type==='success'||type==='error'){start.disabled=false;cancel.hidden=true}})
+    start.addEventListener('click',async()=>{output.textContent='Starting local YouTube import…';start.disabled=true;cancel.hidden=false;try{await api.startYoutubeImport({url:document.getElementById('url').value,length:document.getElementById('length').value,count:document.getElementById('count').value,quality:document.getElementById('quality').value})}catch(e){output.textContent=e.message;start.disabled=false;cancel.hidden=true}})
+    cancel.addEventListener('click',()=>api.cancelYoutubeImport())
+  </script>
+</body>
+</html>
